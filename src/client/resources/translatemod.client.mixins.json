@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "kr.acog.translatemod.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ChatHudMixin",
+    "ChatInputSuggestorMixin",
+    "ChatScreenAccessor",
+    "MessageHandlerMixin",
+    "MinecraftClientMixin",
+    "OptionsScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "mixins": [
+  ]
+}
