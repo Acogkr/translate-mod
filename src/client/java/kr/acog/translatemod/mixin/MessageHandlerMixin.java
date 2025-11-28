@@ -10,6 +10,7 @@ import net.minecraft.network.message.SignedMessage;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -17,12 +18,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
+
 @Mixin(MessageHandler.class)
 public abstract class MessageHandlerMixin {
 
     @Inject(method = "onGameMessage", at = @At("HEAD"), cancellable = true)
     private void onGameMessage(Text message, boolean overlay, CallbackInfo ci) {
         if (!ClientSettingManager.getSetting().enabled()) {
+            return;
+        }
+
+        if (overlay) {
             return;
         }
 
@@ -34,7 +41,7 @@ public abstract class MessageHandlerMixin {
 
     @Inject(method = "onChatMessage", at = @At("HEAD"), cancellable = true)
     private void onChatMessage(SignedMessage message, GameProfile sender, MessageType.Parameters params,
-            CallbackInfo ci) {
+                               CallbackInfo ci) {
         if (!ClientSettingManager.getSetting().enabled()) {
             return;
         }
@@ -49,7 +56,19 @@ public abstract class MessageHandlerMixin {
     @Unique
     private boolean shouldTranslate(Text original) {
         String raw = original.getString();
-        return !raw.isEmpty() && !raw.startsWith("/");
+
+        if (raw.isEmpty() || raw.startsWith("/")) {
+            return false;
+        }
+
+//        boolean hasHover = original.visit((style, asString) -> {
+//            if (style != null && style.getHoverEvent() != null) {
+//                return Optional.of(true);
+//            }
+//            return Optional.empty();
+//        }, Style.EMPTY).orElse(false);
+
+        return true;
     }
 
     @Unique
@@ -60,8 +79,7 @@ public abstract class MessageHandlerMixin {
         TranslateHandler.translateAsync(original.getString(), targetLocale, ClientSettingManager.getSetting())
                 .thenAccept(translated -> {
                     MinecraftClient.getInstance().execute(() -> {
-                        HoverEvent newHoverEvent = new HoverEvent.ShowText(
-                                Text.literal(targetLocale.getPrefix() + translated));
+                        HoverEvent newHoverEvent = new HoverEvent.ShowText(Text.literal(targetLocale.getPrefix() + translated));
                         withHover.setStyle(withHover.getStyle().withHoverEvent(newHoverEvent));
                         MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(withHover);
                     });
@@ -75,5 +93,4 @@ public abstract class MessageHandlerMixin {
                     return null;
                 });
     }
-
 }

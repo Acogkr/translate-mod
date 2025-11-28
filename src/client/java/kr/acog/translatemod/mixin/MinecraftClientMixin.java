@@ -25,19 +25,20 @@ public abstract class MinecraftClientMixin {
             ClientSetting setting = ClientSettingManager
                     .getSetting();
             boolean newState = !setting.enabled();
-            ClientSettingManager
-                    .setSetting(new ClientSetting(
-                            newState,
-                            setting.key(),
-                            setting.model(),
-                            setting.prompt(),
-                            setting.maxTokens(),
-                            setting.outgoingTargetLanguage(),
-                            3000L));
 
             if (client.player != null) {
                 client.player.sendMessage(Text.literal(newState ? "번역 모드: 켜짐" : "번역 모드: 꺼짐"), false);
             }
+
+            ClientSettingManager.setSetting(new ClientSetting(
+                    newState,
+                    setting.key(),
+                    setting.model(),
+                    setting.prompt(),
+                    setting.maxTokens(),
+                    setting.outgoingTargetLanguage(),
+                    3000L
+            ));
         }
 
         if (client.currentScreen instanceof ChatScreen chatScreen) {
