@@ -38,7 +38,7 @@
 
 ## 주의사항
 
-*   이 모드를 사용하려면 **Google Gemini API 키**가 필요합니다. [Google AI Studio](https://aistudio.google.com/)에서 무료로 발급받을 수 있습니다.
+*   이 모드를 사용하려면 **Google Gemini API 키**가 필요합니다. [Google AI Studio](https://aistudio.google.com/)에서 발급받을 수 있습니다.
 *   API 사용량에 따라 구글 계정에 비용이 청구될 수 있으니, 요금 정책을 확인하세요. 
 
 ---

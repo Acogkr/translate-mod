@@ -3,6 +3,7 @@ package kr.acog.translatemod.gui;
 import kr.acog.translatemod.config.ClientSetting;
 import kr.acog.translatemod.config.ClientSettingManager;
 import kr.acog.translatemod.type.Model;
+import kr.acog.translatemod.type.PromptMode;
 import kr.acog.translatemod.type.TargetLanguage;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -37,56 +38,45 @@ public class TranslateOptionScreen extends Screen {
         int spacing = 5;
         int centerX = this.width / 2;
         int startY = this.height / 4;
-
-        // Left Column
         int leftX = centerX - btnWidth - 5;
-        // Right Column
         int rightX = centerX + 5;
 
-        // Row 1: Toggle & API Key
         this.addDrawableChild(createButton(setting.enabled() ? "번역 모드: 켜짐" : "번역 모드: 꺼짐", btn -> {
             boolean newState = !setting.enabled();
-            updateSetting(newState, setting.key(), setting.model(), setting.prompt(), setting.maxTokens(),
-                    setting.outgoingTargetLanguage(), setting.suggestionTimeout());
+            updateSetting(newState, setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
             btn.setMessage(Text.literal(newState ? "번역 모드: 켜짐" : "번역 모드: 꺼짐"));
         }, leftX, startY, btnWidth, btnHeight));
 
         this.addDrawableChild(createButton("API 키 설정",
                 () -> new TextInputScreen("API 키 입력", setting.key(), this, true, result -> {
-                    updateSetting(setting.enabled(), result, setting.model(), setting.prompt(),
-                            setting.maxTokens(), setting.outgoingTargetLanguage(), setting.suggestionTimeout());
+                    updateSetting(setting.enabled(), result, setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
                 }), rightX, startY, btnWidth, btnHeight));
 
-        // Row 2: Model & Prompt
         modelButton = createButton("모델: " + models[currentModelIndex].getModelId(), btn -> {
             currentModelIndex = (currentModelIndex + 1) % models.length;
             updateModelButtonState();
-            updateSetting(setting.enabled(), setting.key(), models[currentModelIndex], setting.prompt(),
-                    setting.maxTokens(), setting.outgoingTargetLanguage(), setting.suggestionTimeout());
+            updateSetting(setting.enabled(), setting.key(), setting.mode(), models[currentModelIndex], setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
         }, leftX, startY + btnHeight + spacing, btnWidth, btnHeight);
         updateModelButtonState();
         this.addDrawableChild(modelButton);
 
         this.addDrawableChild(createButton("프롬프트 설정",
                 () -> new TextInputScreen("프롬프트 입력", setting.prompt(), this, false, result -> {
-                    updateSetting(setting.enabled(), setting.key(), setting.model(), result,
-                            setting.maxTokens(), setting.outgoingTargetLanguage(), setting.suggestionTimeout());
+                    updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), result, setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
                 }), rightX, startY + btnHeight + spacing, btnWidth, btnHeight));
 
-        // Row 3: Target Language & Reload
-        this.addDrawableChild(createButton("번역할 언어: " + setting.outgoingTargetLanguage().getName(), btn -> {
-            TargetLanguage next = getNextLanguage(setting.outgoingTargetLanguage());
-            updateSetting(setting.enabled(), setting.key(), setting.model(), setting.prompt(),
-                    setting.maxTokens(), next, setting.suggestionTimeout());
+        this.addDrawableChild(createButton("번역할 언어: " + setting.targetLanguage().getName(), btn -> {
+            TargetLanguage next = getNextLanguage(setting.targetLanguage());
+            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), next, setting.suggestionTimeout());
             btn.setMessage(Text.literal("번역할 언어: " + next.getName()));
         }, leftX, startY + (btnHeight + spacing) * 2, btnWidth, btnHeight));
 
-        this.addDrawableChild(createButton("설정 파일 다시 불러오기", btn -> {
-            ClientSettingManager.loadSetting();
-            MinecraftClient.getInstance().setScreen(new TranslateOptionScreen());
+        this.addDrawableChild(createButton("프롬프트: " + setting.mode().getLabel(), btn -> {
+            PromptMode next = getNextPromptMode(setting.mode());
+            updateSetting(setting.enabled(), setting.key(), next, setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
+            btn.setMessage(Text.literal("프롬프트: " + next.getLabel()));
         }, rightX, startY + (btnHeight + spacing) * 2, btnWidth, btnHeight));
 
-        // Row 4: Sliders (Full Width or Centered)
         this.addDrawableChild(new TokenSlider(centerX - btnWidth / 2, startY + (btnHeight + spacing) * 3 + 10,
                 btnWidth, btnHeight, setting.maxTokens()));
 
@@ -118,9 +108,9 @@ public class TranslateOptionScreen extends Screen {
         return 0;
     }
 
-    private void updateSetting(boolean enabled, String key, Model model, String prompt, int maxTokens,
+    private void updateSetting(boolean enabled, String key, PromptMode mode, Model model, String prompt, int maxTokens,
             TargetLanguage outgoing, long suggestionTimeout) {
-        setting = new ClientSetting(enabled, key, model, prompt, maxTokens, outgoing, suggestionTimeout);
+        setting = new ClientSetting(enabled, key, mode, model, prompt, maxTokens, outgoing, suggestionTimeout);
         ClientSettingManager.setSetting(setting);
     }
 
@@ -129,6 +119,14 @@ public class TranslateOptionScreen extends Screen {
             case TargetLanguage.KO -> TargetLanguage.EN;
             case TargetLanguage.EN -> TargetLanguage.JP;
             default -> TargetLanguage.KO;
+        };
+    }
+
+    private PromptMode getNextPromptMode(PromptMode current) {
+        return switch (current) {
+            case PromptMode.ECONOMY -> PromptMode.STANDARD;
+            case PromptMode.STANDARD ->  PromptMode.PRECISE;
+            default -> PromptMode.ECONOMY;
         };
     }
 
@@ -171,8 +169,7 @@ public class TranslateOptionScreen extends Screen {
         @Override
         protected void applyValue() {
             int value = (int) (this.value * 4900) + 100;
-            updateSetting(setting.enabled(), setting.key(), setting.model(), setting.prompt(), value,
-                    setting.outgoingTargetLanguage(), setting.suggestionTimeout());
+            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), value, setting.targetLanguage(), setting.suggestionTimeout());
         }
 
     }
@@ -193,8 +190,7 @@ public class TranslateOptionScreen extends Screen {
         @Override
         protected void applyValue() {
             long value = (long) (this.value * 9000) + 1000;
-            updateSetting(setting.enabled(), setting.key(), setting.model(), setting.prompt(),
-                    setting.maxTokens(), setting.outgoingTargetLanguage(), value);
+            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), value);
         }
 
     }

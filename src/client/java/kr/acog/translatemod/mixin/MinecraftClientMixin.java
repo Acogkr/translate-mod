@@ -33,10 +33,11 @@ public abstract class MinecraftClientMixin {
             ClientSettingManager.setSetting(new ClientSetting(
                     newState,
                     setting.key(),
+                    setting.mode(),
                     setting.model(),
                     setting.prompt(),
                     setting.maxTokens(),
-                    setting.outgoingTargetLanguage(),
+                    setting.targetLanguage(),
                     3000L
             ));
         }

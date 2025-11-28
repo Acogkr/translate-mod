@@ -8,8 +8,6 @@ import java.util.concurrent.CompletableFuture;
 
 public class TranslateHandler {
 
-    private static final String basePrompt = "Translate the following text into %s. Return ONLY the translated text. Do not include any explanations, emojis, or markdown formatting. If the text is already in the target language, return it as is. The user's prompt: %s. The content to be translated is: ";
-
     public static CompletableFuture<String> translateAsync(String original, TargetLanguage targetLanguageCode,
             ClientSetting setting) {
         if (!setting.enabled()) {
@@ -39,14 +37,10 @@ public class TranslateHandler {
         });
     }
 
-    public record TranslateData(ClientSetting setting, String original, String prompt) {
+    public record TranslateData(ClientSetting setting, String prompt) {
 
         public static TranslateData ofDefault(ClientSetting setting, String original, String targetLanguage) {
-            return new TranslateData(setting, original, composePrompt(targetLanguage, setting.prompt()));
-        }
-
-        private static String composePrompt(String targetLanguage, String prompt) {
-            return String.format(basePrompt, targetLanguage, prompt);
+            return new TranslateData(setting, setting.mode().format(targetLanguage, setting.prompt(), original));
         }
 
     }

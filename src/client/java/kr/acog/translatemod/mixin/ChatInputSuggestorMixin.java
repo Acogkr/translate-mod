@@ -85,8 +85,7 @@ public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccesso
         }
 
         return TranslateHandler
-                .translateAsync(currentInput, ClientSettingManager.getSetting().outgoingTargetLanguage(),
-                        ClientSettingManager.getSetting())
+                .translateAsync(currentInput, ClientSettingManager.getSetting().targetLanguage(), ClientSettingManager.getSetting())
                 .thenApplyAsync(translated -> {
                     suggestionCache.put(currentInput, translated);
                     SuggestionsBuilder builder = new SuggestionsBuilder(currentInput, 0);

@@ -24,10 +24,25 @@ public class GoogleGeminiRequestHandler {
             String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
             ObjectNode rootNode = mapper.createObjectNode();
+
             ArrayNode contentsNode = rootNode.putArray("contents");
             ObjectNode partsNode = contentsNode.addObject();
             ArrayNode partsArray = partsNode.putArray("parts");
-            partsArray.addObject().put("text", data.prompt() + data.original());
+            partsArray.addObject().put("text", data.prompt());
+
+            ArrayNode safetySettings = rootNode.putArray("safetySettings");
+            String[] safetyCategories = {
+                    "HARM_CATEGORY_HARASSMENT",
+                    "HARM_CATEGORY_HATE_SPEECH",
+                    "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "HARM_CATEGORY_DANGEROUS_CONTENT"
+            };
+
+            for (String category : safetyCategories) {
+                ObjectNode setting = safetySettings.addObject();
+                setting.put("category", category);
+                setting.put("threshold", "BLOCK_NONE");
+            }
 
             ObjectNode generationConfig = rootNode.putObject("generationConfig");
             generationConfig.put("maxOutputTokens", data.setting().maxTokens());
@@ -44,13 +59,21 @@ public class GoogleGeminiRequestHandler {
                     .thenApply(response -> {
                         try {
                             if (response.statusCode() != 200) {
+                                System.err.println("API Error Body: " + response.body());
                                 throw new RuntimeException("API 오류: " + response.statusCode() + " " + response.body());
                             }
                             JsonNode responseNode = mapper.readTree(response.body());
-                            return responseNode.path("candidates").get(0).path("content").path("parts").get(0)
+
+                            JsonNode candidates = responseNode.path("candidates");
+                            if (candidates.isMissingNode() || candidates.isEmpty()) {
+                                System.err.println("No candidates returned. Response: " + response.body());
+                                return "번역 불가 (Blocked)";
+                            }
+
+                            return candidates.get(0).path("content").path("parts").get(0)
                                     .path("text").asText().trim();
                         } catch (Exception e) {
-                            System.out.println(e.getMessage()   );
+                            System.out.println(e.getMessage());
                             throw new RuntimeException("응답 파싱 실패", e);
                         }
                     });

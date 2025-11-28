@@ -2,6 +2,7 @@ package kr.acog.translatemod.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.acog.translatemod.type.Model;
+import kr.acog.translatemod.type.PromptMode;
 import kr.acog.translatemod.type.TargetLanguage;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -32,17 +33,17 @@ public class ClientSettingManager {
                 setting = new ClientSetting(
                         loaded.enabled(),
                         decode(loaded.key()),
+                        loaded.mode() == null ? PromptMode.STANDARD : loaded.mode(),
                         loaded.model() == null ? Model.GEMINI_2_0_FLASH_LITE : loaded.model(),
                         loaded.prompt(),
                         loaded.maxTokens() == 0 ? 1000 : loaded.maxTokens(),
-                        loaded.outgoingTargetLanguage() == null ? TargetLanguage.EN
-                                : loaded.outgoingTargetLanguage(),
+                        loaded.targetLanguage() == null ? TargetLanguage.EN : loaded.targetLanguage(),
                         loaded.suggestionTimeout() == 0 ? 3000L : loaded.suggestionTimeout());
             } else {
                 saveSetting();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
             setting = ClientSetting.ofDefault();
         }
     }
@@ -52,14 +53,15 @@ public class ClientSettingManager {
             ClientSetting encrypted = new ClientSetting(
                     setting.enabled(),
                     encode(setting.key()),
+                    setting.mode(),
                     setting.model(),
                     setting.prompt(),
                     setting.maxTokens(),
-                    setting.outgoingTargetLanguage(),
+                    setting.targetLanguage(),
                     setting.suggestionTimeout());
             mapper.writerWithDefaultPrettyPrinter().writeValue(CONFIG_PATH.toFile(), encrypted);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 

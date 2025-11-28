@@ -10,15 +10,12 @@ import net.minecraft.network.message.SignedMessage;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Optional;
 
 @Mixin(MessageHandler.class)
 public abstract class MessageHandlerMixin {
@@ -57,18 +54,7 @@ public abstract class MessageHandlerMixin {
     private boolean shouldTranslate(Text original) {
         String raw = original.getString();
 
-        if (raw.isEmpty() || raw.startsWith("/")) {
-            return false;
-        }
-
-//        boolean hasHover = original.visit((style, asString) -> {
-//            if (style != null && style.getHoverEvent() != null) {
-//                return Optional.of(true);
-//            }
-//            return Optional.empty();
-//        }, Style.EMPTY).orElse(false);
-
-        return true;
+        return !raw.isEmpty() && !raw.startsWith("/");
     }
 
     @Unique
