@@ -1,49 +1,52 @@
 package kr.acog.translatemod.api;
 
-import kr.acog.translatemod.api.handler.ChatGPTRequestHandler;
 import kr.acog.translatemod.api.handler.GoogleGeminiRequestHandler;
-import kr.acog.translatemod.api.handler.OpenRouterRequestHandler;
-import kr.acog.translatemod.client.config.ClientSetting;
+import kr.acog.translatemod.config.ClientSetting;
+import kr.acog.translatemod.type.TargetLanguage;
 
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class TranslateHandler {
 
-    private static final String basePrompt = "Extract only the chat portion and translate it into %s language, excluding difficult or context-dependent terms. Return only the translated text. The rest is the user’s prompt: %s. The content to be translated is: ";
+    private static final String basePrompt = "Translate the following text into %s. Return ONLY the translated text. Do not include any explanations, emojis, or markdown formatting. If the text is already in the target language, return it as is. The user's prompt: %s. The content to be translated is: ";
 
-    public static CompletableFuture<String> translateAsync(String original, Locale from, ClientSetting setting) {
-        TranslateData data = TranslateData.ofDefault(setting, original, from);
-
-        if (data.setting.key().isEmpty()) {
-            return CompletableFuture.completedFuture("API key is not set.");
+    public static CompletableFuture<String> translateAsync(String original, TargetLanguage targetLanguageCode,
+            ClientSetting setting) {
+        if (!setting.enabled()) {
+            return CompletableFuture.completedFuture(original);
         }
 
-        switch (data.setting.type()) {
-            case CHATGPT -> {
-                return ChatGPTRequestHandler.request(data);
+        return CompletableFuture.supplyAsync(() -> {
+            String targetLanguageName = targetLanguageCode.getName();
+            return TranslateData.ofDefault(setting, original, targetLanguageName);
+        }).thenCompose(data -> {
+            if (data.setting.key().isEmpty()) {
+                return CompletableFuture.completedFuture("API 키가 설정되지 않았습니다.");
             }
-            case GOOGLE_GEMINI -> {
-                return GoogleGeminiRequestHandler.request(data);
-            }
-            case OPENROUTER -> {
-                return OpenRouterRequestHandler.request(data);
-            }
-            default -> {
-                throw new IllegalArgumentException("Unsupported provider type: " + data.setting.type());
-            }
-        }
 
+            CompletableFuture<String> primary = GoogleGeminiRequestHandler.request(data);
+
+            if (primary == null) {
+                return CompletableFuture.completedFuture("요청 생성 실패.");
+            }
+
+            return primary.handle((result, ex) -> {
+                if (ex != null) {
+                    return "번역 실패: " + ex.getMessage();
+                }
+                return result;
+            });
+        });
     }
 
-    public record TranslateData(ClientSetting setting,String original, String prompt) {
+    public record TranslateData(ClientSetting setting, String original, String prompt) {
 
-        public static TranslateData ofDefault(ClientSetting setting, String original, Locale from) {
-            return new TranslateData(setting, original, composePrompt(from, setting.prompt()));
+        public static TranslateData ofDefault(ClientSetting setting, String original, String targetLanguage) {
+            return new TranslateData(setting, original, composePrompt(targetLanguage, setting.prompt()));
         }
 
-        private static String composePrompt(Locale from, String prompt) {
-            return String.format(basePrompt, from.getLanguage(), prompt);
+        private static String composePrompt(String targetLanguage, String prompt) {
+            return String.format(basePrompt, targetLanguage, prompt);
         }
 
     }

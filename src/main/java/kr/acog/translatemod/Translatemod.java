@@ -7,4 +7,5 @@ public class Translatemod implements ModInitializer {
     @Override
     public void onInitialize() {
     }
+
 }

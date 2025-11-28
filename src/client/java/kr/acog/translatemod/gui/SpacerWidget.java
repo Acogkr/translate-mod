@@ -1,4 +1,4 @@
-package kr.acog.translatemod.client.screen;
+package kr.acog.translatemod.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;

@@ -3,8 +3,10 @@
   "id": "translatemod",
   "version": "${version}",
   "name": "TranslateMod",
-  "description": "",
-  "authors": ["Acog"],
+  "description": "Google Gemini API를 활용한 마인크래프트 실시간 채팅 번역 모드",
+  "authors": [
+    "Acog"
+  ],
   "contact": {},
   "license": "All-Rights-Reserved",
   "icon": "assets/translatemod/icon.png",
@@ -14,7 +16,7 @@
       "kr.acog.translatemod.TranslateModDataGenerator"
     ],
     "client": [
-      "kr.acog.translatemod.client.TranslateModClient"
+      "kr.acog.translatemod.TranslateModClient"
     ],
     "main": [
       "kr.acog.translatemod.Translatemod"
@@ -29,7 +31,7 @@
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
-    "minecraft": "${minecraft_version}"
+    "minecraft": ">=1.21.1"
   },
   "suggests": {
     "fabric-api": "*"

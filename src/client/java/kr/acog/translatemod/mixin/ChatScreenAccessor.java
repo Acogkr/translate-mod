@@ -1,4 +1,4 @@
-package kr.acog.translatemod.client.mixin;
+package kr.acog.translatemod.mixin;
 
 import net.minecraft.client.gui.screen.ChatInputSuggestor;
 import net.minecraft.client.gui.screen.ChatScreen;
