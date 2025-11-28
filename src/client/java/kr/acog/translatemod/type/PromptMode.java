@@ -62,7 +62,6 @@ public enum PromptMode {
             instruction = String.format(template, targetLang, safeRule);
         }
 
-        // 지시문 뒤에 원본 텍스트를 붙여서 반환
         return instruction + originalText;
     }
 }
