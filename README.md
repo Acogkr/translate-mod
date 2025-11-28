@@ -26,7 +26,7 @@
 이 모드는 **Fabric** 로더가 필요합니다.
 
 1.  **Fabric Loader**를 설치합니다. (Minecraft 버전에 맞게)
-2.  다운로드한 **Translate Mod 파일**을 `mods` 폴더에 넣습니다.
+2.  [이곳](https://github.com/Acogkr/translate-mod/releases/tag/release)에서 다운로드한 **Translate Mod 파일**을 `mods` 폴더에 넣습니다.
 
 ## 사용 방법
 
@@ -39,7 +39,7 @@
 ## 주의사항
 
 *   이 모드를 사용하려면 **Google Gemini API 키**가 필요합니다. [Google AI Studio](https://aistudio.google.com/)에서 발급받을 수 있습니다.
-*   API 사용량에 따라 구글 계정에 비용이 청구될 수 있으니, 요금 정책을 확인하세요. 
+*   API 사용량에 따라 구글 계정에 비용이 청구될 수 있으니, 요금 정책을 확인하세요.
 
 ---
 Developed by Acogkr
