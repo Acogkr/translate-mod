@@ -31,7 +31,7 @@ public class ClientSettingManager {
                 ClientSetting loaded = mapper.readValue(CONFIG_PATH.toFile(), ClientSetting.class);
                 setting = new ClientSetting(
                         loaded.enabled(),
-                        decode(loaded.key()),
+                        EncryptionUtil.decrypt(loaded.key()),
                         loaded.mode() == null ? PromptMode.STANDARD : loaded.mode(),
                         loaded.model() == null ? Model.GEMINI_2_0_FLASH_LITE : loaded.model(),
                         loaded.prompt(), loaded.maxTokens() == 0 ? 1000 : loaded.maxTokens(),
@@ -49,28 +49,19 @@ public class ClientSettingManager {
 
     public static void saveSetting() {
         try {
-            ClientSetting encrypted = new ClientSetting(setting.enabled(), encode(setting.key()), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
+            ClientSetting encrypted = new ClientSetting(
+                    setting.enabled(),
+                    EncryptionUtil.encrypt(setting.key()),
+                    setting.mode(),
+                    setting.model(),
+                    setting.prompt(),
+                    setting.maxTokens(),
+                    setting.targetLanguage(),
+                    setting.suggestionTimeout()
+            );
             mapper.writerWithDefaultPrettyPrinter().writeValue(CONFIG_PATH.toFile(), encrypted);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-        }
-    }
-
-    private static String encode(String input) {
-        if (input == null || input.isEmpty()) {
-            return input;
-        }
-        return java.util.Base64.getEncoder().encodeToString(input.getBytes());
-    }
-
-    private static String decode(String input) {
-        if (input == null || input.isEmpty()) {
-            return input;
-        }
-        try {
-            return new String(java.util.Base64.getDecoder().decode(input));
-        } catch (IllegalArgumentException e) {
-            return input;
         }
     }
 
