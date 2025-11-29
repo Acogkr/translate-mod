@@ -44,3 +44,9 @@ This mod requires **Fabric** Loader and **Fabric API**.
 * To use this mod, a **Google Gemini API Key** is required. You can issue one at [Google AI Studio](https://aistudio.google.com/).
 * Costs may be charged to your Google account depending on API usage, so please check the pricing policy.
 * * **Performance Note**: You can use the free tier, but it is extremely slow and frustrating. In my tests, 2,000 requests cost approximately 10 KRW.
+
+
+## In Game
+![Message Suggestor](https://raw.githubusercontent.com/Acogkr/translate-mod/main/images/message_suggestor.png)
+![Message Hover](https://raw.githubusercontent.com/Acogkr/translate-mod/main/images/message_hover.png)
+![Mod Settings](https://raw.githubusercontent.com/Acogkr/translate-mod/main/images/mod_settings.png)
