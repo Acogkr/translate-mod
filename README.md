@@ -1,7 +1,8 @@
 # Minecraft Translate Mod
 
-This is a **Real-time Chat Translation Mod** for Minecraft utilizing the **Google Gemini API**.
-It is a mod that I started making for personal use... sort of.
+This is a **Real-time Chat Translation Mod** for Minecraft utilizing the **Google Gemini API**.   
+It is a mod that I started making for personal use... sort of.   
+The biggest reason I use it is that it understands slang and abbreviations.
 
 ## Key Features
 
@@ -42,9 +43,4 @@ This mod requires **Fabric** Loader and **Fabric API**.
 
 * To use this mod, a **Google Gemini API Key** is required. You can issue one at [Google AI Studio](https://aistudio.google.com/).
 * Costs may be charged to your Google account depending on API usage, so please check the pricing policy.
-
-## Notes
-
-* To use this mod, a **Google Gemini API Key** is required. You can issue one at [Google AI Studio](https://aistudio.google.com/).
-* Costs may be charged to your Google account depending on API usage, so please check the pricing policy.
-* **Performance Note**: You can use the free tier, but it is extremely slow and frustrating. In my tests, 2,000 requests cost approximately 10 KRW.
+* * **Performance Note**: You can use the free tier, but it is extremely slow and frustrating. In my tests, 2,000 requests cost approximately 10 KRW.
