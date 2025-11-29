@@ -15,7 +15,7 @@ public class TranslateHandler {
         }
 
         return CompletableFuture.supplyAsync(() -> {
-            String targetLanguageName = targetLanguageCode.getName();
+            String targetLanguageName = targetLanguageCode.getApiName();
             return TranslateData.ofDefault(setting, original, targetLanguageName);
         }).thenCompose(data -> {
             if (data.setting.key().isEmpty()) {

@@ -22,7 +22,7 @@ public abstract class OptionsScreenMixin {
 
     @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/GridWidget;createAdder(I)Lnet/minecraft/client/gui/widget/GridWidget$Adder;", ordinal = 0))
     private GridWidget.Adder onCreateAdder(GridWidget gridWidget, int columns) {
-        Text title = Text.literal("번역 모드 설정");
+        Text title = Text.translatable("translatemod.title.options");
         GridWidget.Adder adder = gridWidget.createAdder(columns);
         adder.add(this.createButton(title, TranslateOptionScreen::new));
         adder.add(new SpacerWidget(150, 20));

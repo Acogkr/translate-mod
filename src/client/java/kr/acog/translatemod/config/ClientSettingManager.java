@@ -10,8 +10,7 @@ import java.nio.file.Path;
 
 public class ClientSettingManager {
 
-    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir()
-            .resolve("translatemod_settings.json");
+    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("translatemod_settings.json");
 
     private static ClientSetting setting = ClientSetting.ofDefault();
 
@@ -35,10 +34,10 @@ public class ClientSettingManager {
                         decode(loaded.key()),
                         loaded.mode() == null ? PromptMode.STANDARD : loaded.mode(),
                         loaded.model() == null ? Model.GEMINI_2_0_FLASH_LITE : loaded.model(),
-                        loaded.prompt(),
-                        loaded.maxTokens() == 0 ? 1000 : loaded.maxTokens(),
+                        loaded.prompt(), loaded.maxTokens() == 0 ? 1000 : loaded.maxTokens(),
                         loaded.targetLanguage() == null ? TargetLanguage.EN : loaded.targetLanguage(),
-                        loaded.suggestionTimeout() == 0 ? 3000L : loaded.suggestionTimeout());
+                        loaded.suggestionTimeout() == 0 ? 3000L : loaded.suggestionTimeout()
+                );
             } else {
                 saveSetting();
             }
@@ -50,15 +49,7 @@ public class ClientSettingManager {
 
     public static void saveSetting() {
         try {
-            ClientSetting encrypted = new ClientSetting(
-                    setting.enabled(),
-                    encode(setting.key()),
-                    setting.mode(),
-                    setting.model(),
-                    setting.prompt(),
-                    setting.maxTokens(),
-                    setting.targetLanguage(),
-                    setting.suggestionTimeout());
+            ClientSetting encrypted = new ClientSetting(setting.enabled(), encode(setting.key()), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
             mapper.writerWithDefaultPrettyPrinter().writeValue(CONFIG_PATH.toFile(), encrypted);
         } catch (Exception e) {
             System.out.println(e.getMessage());

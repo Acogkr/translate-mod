@@ -1,44 +1,50 @@
 # Minecraft Translate Mod
 
-**Google Gemini API**를 활용한 마인크래프트 **실시간 채팅 번역 모드**입니다.  
-개인적인 사용을 위해 제작을 시작한.. 그런 모드입니다. 
-## 주요 기능
+This is a **Real-time Chat Translation Mod** for Minecraft utilizing the **Google Gemini API**.
+It is a mod that I started making for personal use... sort of.
 
-### 1. 실시간 수신 번역
-*   채팅창에 올라오는 다른 플레이어의 메시지를 자동으로 감지합니다.
-*   메시지에 마우스를 올리면(Hover) **번역된 텍스트**가 툴팁으로 표시됩니다.
-*   게임의 원래 채팅 로그를 해치지 않으면서 편리하게 번역을 확인할 수 있습니다.
+## Key Features
 
-### 2. 발신 메시지 제안
-*   채팅 입력창에 메시지를 작성하고 잠시 기다리면(기본 3초), **번역된 문장이 제안**됩니다.
-*   `Tab` 키를 눌러 제안된 번역문을 즉시 입력할 수 있습니다.
-*   한국어 -> 영어 -> 일본어 순으로 번역 타겟 언어를 변경할 수 있습니다.
+### 1. Real-time Incoming Translation
+* Automatically detects messages from other players in the chat window.
+* Hovering your mouse over a message displays the **translated text** as a tooltip.
+* Allows you to conveniently check translations without altering the original game chat logs.
+* You can easily toggle it on and off using a shortcut key ( Default : O )
 
-### 3. 설정 기능
-*   **모델 선택**: `Gemini 2.0 Flash Lite`, `2.0 Flash`, `2.5 Flash` 등 다양한 모델을 선택할 수 있습니다.
-*  
-*   **API 키 관리**: 게임 내 설정 화면에서 API 키를 입력하고 저장할 수 있습니다.
-*   **커스터마이징**:
-    *   **프롬프트 설정**: 토큰을 절약하기 위해 프롬포트 모드를 설정 할 수 있습니다.
-    *   **토큰 제한**: 응답 길이를 조절할 수 있습니다 (100 ~ 5000)
-    *   **제안 대기 시간**: 입력 후 번역 제안이 뜰 때까지의 시간을 조절할 수 있습니다 (1초 ~ 10초)
+### 2. Outgoing Message Suggestions
+* If you type a message in the chat input field and wait for a moment (default 3 seconds), a **translated sentence is suggested**.
+* Press the `Tab` key to immediately input the suggested translation.
+* You can cycle the target language order: Korean -> English -> Japanese.
 
-## 설치 방법
+### 3. Configuration
+* **Model Selection**: You can choose various models such as `Gemini 2.0 Flash Lite`, `2.0 Flash`, and `2.5 Flash`.
+* **API Key Management**: You can enter and save your API Key in the in-game settings screen.
+* **Customization**:
+    * **Prompt Settings**: You can set prompt modes to save tokens.
+    * **Token Limit**: You can adjust the response length (100 ~ 5000).
+    * **Suggestion Delay**: You can adjust the time it takes for a translation suggestion to appear after typing (1s ~ 10s).
 
-이 모드는 **Fabric** 로더가 필요합니다.
-1.  **Fabric Loader**를 설치합니다. (Minecraft 버전에 맞게)
-2.  [이곳](https://github.com/Acogkr/translate-mod/releases/tag/release)에서 다운로드한 **Translate Mod 파일**을 `mods` 폴더에 넣습니다.
+## Installation
 
-## 사용 방법
+This mod requires **Fabric** Loader and **Fabric API**.
+1.  Install **Fabric Loader**. (Match your Minecraft version)
+2.  Place **Fabric API** into the `mods` folder. (Version used during development: `0.138.3+1.21.10`)
+3.  Place the **Translate Mod file** downloaded from [here](https://github.com/Acogkr/translate-mod/releases/tag/release) into the `mods` folder.
 
-1.  게임 접속 후 `ESC` -> `설정` -> `번역 모드 설정` 으로 들어갑니다.
-2.  **API 키 설정** 버튼을 눌러 Google AI Studio에서 발급받은 키를 입력합니다.
-3.  원하는 **모델**과 **설정**을 조정합니다.
-    *   *주의: `Gemini 2.0 Flash Lite` 외의 모델 사용 시 비용이 기존보다 높게 발생하거나 속도가 느려질 수 있습니다.*
+## Usage
 
-## 주의사항
+1.  After joining the game, go to `ESC` -> `Options` -> `Translate Mod Settings`.
+2.  Click the **Set API Key** button and enter the key issued from Google AI Studio.
+3.  Adjust the desired **Model** and **Settings**.
+    * *Note: Using models other than `Gemini 2.0 Flash Lite` may result in higher costs or slower speeds.*
 
-*   이 모드를 사용하려면 **Google Gemini API 키**가 필요합니다. [Google AI Studio](https://aistudio.google.com/)에서 발급받을 수 있습니다.
-*   API 사용량에 따라 구글 계정에 비용이 청구될 수 있으니, 요금 정책을 확인하세요.
+## Notes
 
----
+* To use this mod, a **Google Gemini API Key** is required. You can issue one at [Google AI Studio](https://aistudio.google.com/).
+* Costs may be charged to your Google account depending on API usage, so please check the pricing policy.
+
+## Notes
+
+* To use this mod, a **Google Gemini API Key** is required. You can issue one at [Google AI Studio](https://aistudio.google.com/).
+* Costs may be charged to your Google account depending on API usage, so please check the pricing policy.
+* **Performance Note**: You can use the free tier, but it is extremely slow and frustrating. In my tests, 2,000 requests cost approximately 10 KRW.

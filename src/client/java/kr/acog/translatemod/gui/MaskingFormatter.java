@@ -17,13 +17,7 @@ public class MaskingFormatter implements Formatter {
     @Nullable
     public OrderedText format(String string, int firstCharacterIndex) {
         if (this.isPassword) {
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < string.length(); i++) {
-                builder.append('*');
-            }
-            
-            return OrderedText.styledForwardsVisitedString(builder.toString(), Style.EMPTY);
-            
+            return OrderedText.styledForwardsVisitedString("*".repeat(string.length()), Style.EMPTY);
         }
         return null;
     }

@@ -1,25 +1,31 @@
 package kr.acog.translatemod.type;
 
+import net.minecraft.text.Text;
+
 public enum TargetLanguage {
-    KO("Korean"),
-    EN("English"),
-    JP("Japanese");
+    KO("translatemod.language.korean", "translatemod.prefix", "Korean"),
+    EN("translatemod.language.english", "translatemod.prefix", "English"),
+    JA("translatemod.language.japanese", "translatemod.prefix", "Japanese");
 
-    private final String name;
+    private final String nameKey;
+    private final String prefixKey;
+    private final String apiName;
 
-    TargetLanguage(String name) {
-        this.name = name;
+    TargetLanguage(String nameKey, String prefixKey, String apiName) {
+        this.nameKey = nameKey;
+        this.prefixKey = prefixKey;
+        this.apiName = apiName;
     }
 
-    public String getName() {
-        return name;
+    public Text getName() {
+        return Text.translatable(nameKey);
     }
 
-    public String getPrefix() {
-        return switch (this) {
-            case KO -> "[번역] ";
-            case EN -> "[Translate] ";
-            case JP -> "[翻訳] ";
-        };
+    public Text getPrefix() {
+        return Text.translatable(prefixKey);
+    }
+
+    public String getApiName() {
+        return apiName;
     }
 }

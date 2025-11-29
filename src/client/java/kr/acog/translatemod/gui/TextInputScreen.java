@@ -11,15 +11,15 @@ import java.util.function.Consumer;
 
 public class TextInputScreen extends Screen {
 
-    private final String titleText;
+    private final Text titleText;
     private final String initialValue;
     private final Screen parent;
     private final boolean isPassword;
     private final Consumer<String> onSave;
     private TextFieldWidget textField;
 
-    public TextInputScreen(String title, String initialValue, Screen parent, boolean isPassword, Consumer<String> onSave) {
-        super(Text.literal(title));
+    public TextInputScreen(Text title, String initialValue, Screen parent, boolean isPassword, Consumer<String> onSave) {
+        super(title);
         this.titleText = title;
         this.initialValue = initialValue;
         this.parent = parent;
@@ -42,12 +42,12 @@ public class TextInputScreen extends Screen {
 
         this.addDrawableChild(textField);
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("저장"), button -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("translatemod.button.save"), button -> {
             onSave.accept(textField.getText());
             MinecraftClient.getInstance().setScreen(parent);
         }).dimensions(centerX - 105, centerY + 10, 100, 20).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.literal("취소"), button -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("translatemod.button.cancel"), button -> {
             MinecraftClient.getInstance().setScreen(parent);
         }).dimensions(centerX + 5, centerY + 10, 100, 20).build());
     }
@@ -55,8 +55,7 @@ public class TextInputScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         super.render(context, mouseX, mouseY, deltaTicks);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(this.titleText), this.width / 2,
-                this.height / 2 - 50, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.titleText, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
     }
 
 }
