@@ -1,7 +1,8 @@
 # Minecraft Translate Mod
 
-This is a **Real-time Chat Translation Mod** for Minecraft utilizing the **Google Gemini API**.
-It is a mod that I started making for personal use... sort of.
+This is a **Real-time Chat Translation Mod** for Minecraft utilizing the **Google Gemini API**.   
+It is a mod that I started making for personal use... sort of.   
+The biggest reason I use it is that it understands slang and abbreviations.
 
 ## Key Features
 
