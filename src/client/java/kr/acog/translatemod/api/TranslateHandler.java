@@ -17,7 +17,15 @@ public class TranslateHandler {
             return CompletableFuture.completedFuture(original);
         }
 
-        TranslateData data = TranslateData.ofDefault(setting, original, targetLanguage.getApiName());
+        return requestPromptAsync(TranslateData.ofDefault(setting, original, targetLanguage.getApiName()).prompt(), setting);
+    }
+
+    public static CompletableFuture<String> requestPromptAsync(String prompt, ClientSetting setting) {
+        if (!setting.enabled()) {
+            return CompletableFuture.completedFuture(prompt);
+        }
+
+        TranslateData data = new TranslateData(setting, prompt);
 
         if (data.setting().model().getProvider() != Provider.OLLAMA && data.setting().currentApiKey().isEmpty()) {
             return CompletableFuture.failedFuture(new IllegalStateException("API 키가 설정되지 않았습니다."));
