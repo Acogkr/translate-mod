@@ -1,0 +1,86 @@
+name: Build and Release Mod Jar
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle 8.14.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.1
+
+      - name: Build mod jar
+        run: gradle build remapJar sourcesJar --no-daemon
+
+      - name: Collect release artifacts
+        run: |
+          mkdir -p dist
+          find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-dev.jar' -exec cp {} dist/ \;
+          ls -al dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: translatemod-jars
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Move dev-build tag to latest commit
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -f dev-build
+          git push origin refs/tags/dev-build --force
+
+      - name: Publish development prerelease
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: dev-build
+          name: Development Build
+          body: |
+            Latest automatic development build from `${{ github.ref_name }}`.
+
+            Commit: `${{ github.sha }}`
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+          removeArtifacts: true
+          makeLatest: false
+          artifactErrorsFailBuild: true
+          artifacts: dist/*
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generateReleaseNotes: true
+          artifactErrorsFailBuild: true
+          allowUpdates: true
+          replacesArtifacts: true
+          artifacts: dist/*
