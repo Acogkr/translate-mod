@@ -5,44 +5,36 @@ import net.minecraft.text.Text;
 public enum PromptMode {
 
     ECONOMY("translatemod.prompt.economy", """
-            Context: Minecraft Chat
             Target Language: %s
-            Command: Translate the text below.
-            Strict Constraint: Output ONLY the translated string. Do not use quotation marks.
-            Translate only the chat message, excluding nicknames and titles.
+            Translate the chat message below. Output ONLY the translated text, nothing else.
 
             Input:
             """),
 
     STANDARD("translatemod.prompt.standard", """
-            Context: Minecraft Chat
+            Context: Minecraft chat message
             Target Language: %s
             User Rule: %s
 
-            Command: Translate the text below.
-            Strict Constraint: Output ONLY the translated string. Do not use quotation marks.
-            Translate only the chat message, excluding nicknames and titles.
-
-            1. Translate the input text naturally, keeping gaming nuances.
+            Translate the chat message below. Output ONLY the translated text.
+            Preserve gaming terms, emotes, and player names as-is.
 
             Input:
             """),
 
     PRECISE("translatemod.prompt.precise", """
-            Context: Minecraft Chat
+            Context: Minecraft chat message
             Target Language: %s
             User Rule: %s
 
-            Command: Translate the text below.
-            Strict Constraint: Output ONLY the translated string. Do not use quotation marks.
-            Translate only the chat message, excluding nicknames and titles.
+            Translate the chat message below. Output ONLY the translated text.
+            Rules:
+            - Preserve gaming terms, emotes, and player names exactly.
+            - Never add introductory phrases (e.g. "Sure,", "Here:").
+            - Never wrap output in quotes or markdown.
+            - Preserve line breaks and formatting from the original.
 
-            1. Translate the input text naturally, keeping gaming nuances.
-            2. DO NOT include any introductory text (e.g., "Sure", "Here is").
-            3. DO NOT wrap the result in quotes ("") or markdown code blocks.
-            4. Return ONLY the raw translated string.
-
-            input:
+            Input:
             """);
 
     private final String labelKey;
@@ -58,15 +50,8 @@ public enum PromptMode {
     }
 
     public String format(String targetLang, String userRule, String originalText) {
-        String instruction;
-
-        if (this == ECONOMY) {
-            instruction = String.format(template, targetLang);
-        } else {
-            String safeRule = (userRule == null || userRule.isBlank()) ? "Translate naturally" : userRule;
-            instruction = String.format(template, targetLang, safeRule);
-        }
-
-        return instruction + originalText;
+        String safeRule = (userRule == null || userRule.isBlank()) ? "Translate naturally" : userRule;
+        return String.format(template, targetLang, safeRule) + originalText;
     }
+
 }

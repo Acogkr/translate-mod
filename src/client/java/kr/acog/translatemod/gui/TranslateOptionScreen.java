@@ -4,24 +4,28 @@ import kr.acog.translatemod.config.ClientSetting;
 import kr.acog.translatemod.config.ClientSettingManager;
 import kr.acog.translatemod.type.Model;
 import kr.acog.translatemod.type.PromptMode;
+import kr.acog.translatemod.type.Provider;
 import kr.acog.translatemod.type.TargetLanguage;
+import kr.acog.translatemod.type.TranslateScope;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class TranslateOptionScreen extends Screen {
 
     private ClientSetting setting;
-    private final Model[] models = Model.values();
-    private int currentModelIndex = 0;
-    private ButtonWidget modelButton;
 
     public TranslateOptionScreen() {
         super(Text.translatable("translatemod.title.options"));
@@ -31,103 +35,177 @@ public class TranslateOptionScreen extends Screen {
     protected void init() {
         super.init();
         setting = ClientSettingManager.getSetting();
-        currentModelIndex = getModelIndex(setting.model());
 
-        int btnWidth = 150;
-        int btnHeight = 20;
-        int spacing = 5;
+        int buttonWidth = 150;
+        int buttonHeight = 20;
+        int gap = 5;
         int centerX = this.width / 2;
         int startY = this.height / 4;
-        int leftX = centerX - btnWidth - 5;
+        int leftX = centerX - buttonWidth - 5;
         int rightX = centerX + 5;
 
-        this.addDrawableChild(createButton(Text.translatable(setting.enabled() ? "translatemod.option.enabled" : "translatemod.option.disabled"), btn -> {
-            boolean newState = !setting.enabled();
-            updateSetting(newState, setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
-            btn.setMessage(Text.translatable(newState ? "translatemod.option.enabled" : "translatemod.option.disabled"));
-        }, leftX, startY, btnWidth, btnHeight));
+        addDrawableChild(createButton(
+                Text.translatable(setting.enabled() ? "translatemod.option.enabled" : "translatemod.option.disabled"),
+                btn -> {
+                    boolean next = !setting.enabled();
+                    updateSetting(setting.withEnabled(next));
+                    btn.setMessage(Text.translatable(next ? "translatemod.option.enabled" : "translatemod.option.disabled"));
+                }, leftX, startY, buttonWidth, buttonHeight));
 
-        this.addDrawableChild(createButton(Text.translatable("translatemod.option.api_key"), () -> new TextInputScreen(Text.translatable("translatemod.screen.api_key.title"), setting.key(), this, true, result -> {
-            updateSetting(setting.enabled(), result, setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
-        }), rightX, startY, btnWidth, btnHeight));
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.provider", setting.model().getProvider().getLabel().getString()),
+                btn -> cycleProvider(), rightX, startY, buttonWidth, buttonHeight));
 
-        modelButton = createButton(Text.translatable("translatemod.option.model", models[currentModelIndex].getModelId()), btn -> {
-            currentModelIndex = (currentModelIndex + 1) % models.length;
-            updateModelButtonState();
-            updateSetting(setting.enabled(), setting.key(), setting.mode(), models[currentModelIndex], setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
-        }, leftX, startY + btnHeight + spacing, btnWidth, btnHeight);
-        updateModelButtonState();
-        this.addDrawableChild(modelButton);
-
-        this.addDrawableChild(createButton(Text.translatable("translatemod.option.prompt_settings"), () -> new TextInputScreen(Text.translatable("translatemod.screen.prompt.title"), setting.prompt(), this, false, result -> {
-            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), result, setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
-        }), rightX, startY + btnHeight + spacing, btnWidth, btnHeight));
-
-        this.addDrawableChild(createButton(Text.translatable("translatemod.option.target_language", setting.targetLanguage().getName().getString()), btn -> {
-            TargetLanguage next = getNextLanguage(setting.targetLanguage());
-            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), next, setting.suggestionTimeout());
-            btn.setMessage(Text.translatable("translatemod.option.target_language", next.getName().getString()));
-        }, leftX, startY + (btnHeight + spacing) * 2, btnWidth, btnHeight));
-
-        this.addDrawableChild(createButton(Text.translatable("translatemod.option.prompt_mode", setting.mode().getLabel().getString()), btn -> {
-            PromptMode next = getNextPromptMode(setting.mode());
-            updateSetting(setting.enabled(), setting.key(), next, setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), setting.suggestionTimeout());
-            btn.setMessage(Text.translatable("translatemod.option.prompt_mode", next.getLabel().getString()));
-        }, rightX, startY + (btnHeight + spacing) * 2, btnWidth, btnHeight));
-
-        this.addDrawableChild(new TokenSlider(centerX - btnWidth / 2, startY + (btnHeight + spacing) * 3 + 10, btnWidth, btnHeight, setting.maxTokens()));
-
-        this.addDrawableChild(new TimeoutSlider(centerX - btnWidth / 2, startY + (btnHeight + spacing) * 4 + 10, btnWidth, btnHeight, setting.suggestionTimeout()));
-    }
-
-    private void updateModelButtonState() {
-        Model current = models[currentModelIndex];
-        boolean isWarning = current != Model.GEMINI_2_0_FLASH_LITE;
-
-        Text message = Text.translatable("translatemod.option.model", current.getModelId());
-        if (isWarning) {
-            message = message.copy().formatted(Formatting.RED);
-            modelButton.setTooltip(Tooltip.of(Text.translatable("translatemod.warning.model_cost").formatted(Formatting.RED)));
+        Provider provider = setting.model().getProvider();
+        if (provider == Provider.OLLAMA) {
+            addOllamaRow(leftX, rightX, startY + (buttonHeight + gap), buttonWidth, buttonHeight);
         } else {
-            modelButton.setTooltip(null);
+            addModelAndKeyRow(leftX, rightX, startY + (buttonHeight + gap), buttonWidth, buttonHeight);
         }
-        modelButton.setMessage(message);
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.my_language", setting.targetLanguage().getName().getString()),
+                btn -> openLanguageList(
+                        Text.translatable("translatemod.screen.my_language.title"),
+                        lang -> updateSetting(setting.withTargetLanguage(lang))),
+                leftX, startY + (buttonHeight + gap) * 2, buttonWidth, buttonHeight));
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.suggestion_language", setting.suggestionLanguage().getName().getString()),
+                btn -> openLanguageList(
+                        Text.translatable("translatemod.screen.suggestion_language.title"),
+                        lang -> updateSetting(setting.withSuggestionLanguage(lang))),
+                rightX, startY + (buttonHeight + gap) * 2, buttonWidth, buttonHeight));
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.prompt_mode", setting.mode().getLabel().getString()),
+                btn -> {
+                    PromptMode next = nextEnum(setting.mode());
+                    updateSetting(setting.withMode(next));
+                    btn.setMessage(Text.translatable("translatemod.option.prompt_mode", next.getLabel().getString()));
+                }, leftX, startY + (buttonHeight + gap) * 3, buttonWidth, buttonHeight));
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.scope", setting.scope().getLabel().getString()),
+                btn -> {
+                    TranslateScope next = nextEnum(setting.scope());
+                    updateSetting(setting.withScope(next));
+                    btn.setMessage(Text.translatable("translatemod.option.scope", next.getLabel().getString()));
+                }, rightX, startY + (buttonHeight + gap) * 3, buttonWidth, buttonHeight));
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.prompt_settings"),
+                () -> new TextInputScreen(Text.translatable("translatemod.screen.prompt.title"),
+                        setting.prompt(), this, false,
+                        result -> updateSetting(setting.withPrompt(result))),
+                centerX - buttonWidth / 2, startY + (buttonHeight + gap) * 4, buttonWidth, buttonHeight));
+
+        addDrawableChild(new SettingSlider(
+                centerX - buttonWidth / 2, startY + (buttonHeight + gap) * 5 + 5, buttonWidth, buttonHeight,
+                100, 4900, "translatemod.option.max_tokens", setting.maxTokens(),
+                value -> updateSettingInMemory(setting.withMaxTokens((int) (long) value))));
+        addDrawableChild(new SettingSlider(
+                centerX - buttonWidth / 2, startY + (buttonHeight + gap) * 6 + 5, buttonWidth, buttonHeight,
+                1000, 9000, "translatemod.option.suggestion_delay", setting.suggestionTimeout(),
+                value -> updateSettingInMemory(setting.withSuggestionTimeout(value))));
     }
 
-    private int getModelIndex(Model model) {
-        for (int i = 0; i < models.length; i++) {
-            if (models[i] == model) {
-                return i;
-            }
-        }
-        return 0;
+    private void addModelAndKeyRow(int leftX, int rightX, int startY, int buttonWidth, int buttonHeight) {
+        addDrawableChild(createButton(
+                Text.literal(setting.model().getModelId()),
+                btn -> openModelList(), leftX, startY, buttonWidth, buttonHeight));
+
+        boolean hasKey = !setting.currentApiKey().isEmpty();
+        Text keyLabel = hasKey
+                ? Text.translatable("translatemod.option.api_key_set").formatted(Formatting.GREEN)
+                : Text.translatable("translatemod.option.api_key").formatted(Formatting.RED);
+        addDrawableChild(createButton(keyLabel,
+                () -> new TextInputScreen(Text.translatable("translatemod.screen.api_key.title"),
+                        setting.currentApiKey(), this, true,
+                        result -> {
+                            Map<Provider, String> keys = new HashMap<>(setting.apiKeys() == null ? new HashMap<>() : setting.apiKeys());
+                            keys.put(setting.model().getProvider(), result);
+                            updateSetting(setting.withApiKeys(keys));
+                        }),
+                rightX, startY, buttonWidth, buttonHeight));
     }
 
-    private void updateSetting(boolean enabled, String key, PromptMode mode, Model model, String prompt, int maxTokens, TargetLanguage outgoing, long suggestionTimeout) {
-        setting = new ClientSetting(enabled, key, mode, model, prompt, maxTokens, outgoing, suggestionTimeout);
+    private void addOllamaRow(int leftX, int rightX, int startY, int buttonWidth, int buttonHeight) {
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.ollama_host", setting.baseUrl()),
+                () -> new TextInputScreen(Text.translatable("translatemod.screen.ollama_host.title"),
+                        setting.baseUrl(), this, false,
+                        result -> updateSetting(setting.withBaseUrl(result))),
+                leftX, startY, buttonWidth, buttonHeight));
+
+        addDrawableChild(createButton(
+                Text.translatable("translatemod.option.ollama_model", setting.customModelId()),
+                () -> new TextInputScreen(Text.translatable("translatemod.screen.ollama_model.title"),
+                        setting.customModelId(), this, false,
+                        result -> updateSetting(setting.withCustomModelId(result))),
+                rightX, startY, buttonWidth, buttonHeight));
+    }
+
+    private void openModelList() {
+        List<Model> models = Model.forProvider(setting.model().getProvider());
+        MinecraftClient.getInstance().setScreen(new ListSelectScreen<>(
+                Text.translatable("translatemod.screen.model.title"),
+                this,
+                models,
+                model -> Text.literal(model.getModelId()),
+                model -> {
+                    updateSetting(setting.withModel(model));
+                    MinecraftClient.getInstance().setScreen(new TranslateOptionScreen());
+                }
+        ));
+    }
+
+    private void openLanguageList(Text title, Consumer<TargetLanguage> onSelect) {
+        MinecraftClient.getInstance().setScreen(new ListSelectScreen<>(
+                title,
+                this,
+                Arrays.asList(TargetLanguage.values()),
+                TargetLanguage::getName,
+                lang -> {
+                    onSelect.accept(lang);
+                    MinecraftClient.getInstance().setScreen(new TranslateOptionScreen());
+                }
+        ));
+    }
+
+    private void cycleProvider() {
+        Provider[] providers = Provider.values();
+        Provider next = providers[(setting.model().getProvider().ordinal() + 1) % providers.length];
+        Model defaultModel = Model.forProvider(next).get(0);
+        updateSetting(setting.withModel(defaultModel));
+        MinecraftClient.getInstance().setScreen(new TranslateOptionScreen());
+    }
+
+    private void updateSetting(ClientSetting newSetting) {
+        setting = newSetting;
         ClientSettingManager.setSetting(setting);
     }
 
-    private TargetLanguage getNextLanguage(TargetLanguage current) {
-        return switch (current) {
-            case TargetLanguage.KO -> TargetLanguage.EN;
-            case TargetLanguage.EN -> TargetLanguage.JA;
-            default -> TargetLanguage.KO;
-        };
+    private void updateSettingInMemory(ClientSetting newSetting) {
+        setting = newSetting;
+        ClientSettingManager.setSettingWithoutSave(newSetting);
     }
 
-    private PromptMode getNextPromptMode(PromptMode current) {
-        return switch (current) {
-            case PromptMode.ECONOMY -> PromptMode.STANDARD;
-            case PromptMode.STANDARD -> PromptMode.PRECISE;
-            default -> PromptMode.ECONOMY;
-        };
+    private static <T extends Enum<T>> T nextEnum(T current) {
+        T[] values = current.getDeclaringClass().getEnumConstants();
+        return values[(current.ordinal() + 1) % values.length];
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         super.render(context, mouseX, mouseY, deltaTicks);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 4 - 50, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(textRenderer, title, width / 2, height / 4 - 50, 0xFFFFFFFF);
+
+        if (setting.model().isExpensive()) {
+            context.drawCenteredTextWithShadow(textRenderer,
+                    Text.translatable("translatemod.warning.model_cost"),
+                    width / 2, height / 4 - 32, 0xFFFFFF55);
+        }
     }
 
     @Override
@@ -136,49 +214,50 @@ public class TranslateOptionScreen extends Screen {
     }
 
     private ButtonWidget createButton(Text text, Supplier<Screen> screenSupplier, int x, int y, int width, int height) {
-        return createButton(text, button -> MinecraftClient.getInstance().setScreen(screenSupplier.get()), x, y, width, height);
+        return createButton(text, btn -> MinecraftClient.getInstance().setScreen(screenSupplier.get()), x, y, width, height);
     }
 
     private ButtonWidget createButton(Text text, ButtonWidget.PressAction onPress, int x, int y, int width, int height) {
         return ButtonWidget.builder(text, onPress).dimensions(x, y, width, height).build();
     }
 
-    private class TokenSlider extends SliderWidget {
+    private class SettingSlider extends SliderWidget {
 
-        public TokenSlider(int x, int y, int width, int height, int initialValue) {
-            super(x, y, width, height, Text.translatable("translatemod.option.max_tokens", initialValue), (double) (initialValue - 100) / 4900);
+        private final long minValue;
+        private final long range;
+        private final String translationKey;
+        private final Consumer<Long> applier;
+
+        public SettingSlider(int x, int y, int width, int height,
+                             long minValue, long range, String translationKey, long initialValue,
+                             Consumer<Long> applier) {
+            super(x, y, width, height,
+                    Text.translatable(translationKey, initialValue),
+                    (double) (initialValue - minValue) / range);
+            this.minValue = minValue;
+            this.range = range;
+            this.translationKey = translationKey;
+            this.applier = applier;
         }
 
         @Override
         protected void updateMessage() {
-            int value = (int) (this.value * 4900) + 100;
-            this.setMessage(Text.translatable("translatemod.option.max_tokens", value));
+            setMessage(Text.translatable(translationKey, computeValue()));
         }
 
         @Override
         protected void applyValue() {
-            int value = (int) (this.value * 4900) + 100;
-            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), value, setting.targetLanguage(), setting.suggestionTimeout());
-        }
-
-    }
-
-    private class TimeoutSlider extends SliderWidget {
-
-        public TimeoutSlider(int x, int y, int width, int height, long initialValue) {
-            super(x, y, width, height, Text.translatable("translatemod.option.suggestion_delay", initialValue), (double) (initialValue - 1000) / 9000);
+            applier.accept(computeValue());
         }
 
         @Override
-        protected void updateMessage() {
-            long value = (long) (this.value * 9000) + 1000;
-            this.setMessage(Text.translatable("translatemod.option.suggestion_delay", value));
+        public void onRelease(Click click) {
+            super.onRelease(click);
+            ClientSettingManager.saveSetting();
         }
 
-        @Override
-        protected void applyValue() {
-            long value = (long) (this.value * 9000) + 1000;
-            updateSetting(setting.enabled(), setting.key(), setting.mode(), setting.model(), setting.prompt(), setting.maxTokens(), setting.targetLanguage(), value);
+        private long computeValue() {
+            return (long) (this.value * range) + minValue;
         }
 
     }

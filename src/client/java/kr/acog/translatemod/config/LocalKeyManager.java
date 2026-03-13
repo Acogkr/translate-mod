@@ -12,9 +12,9 @@ import java.security.SecureRandom;
 public class LocalKeyManager {
 
     private static final Path KEY_PATH = FabricLoader.getInstance().getConfigDir().resolve("translatemod.key");
-    private static SecretKey cachedKey;
+    private static volatile SecretKey cachedKey;
 
-    public static SecretKey getSecretKey() {
+    public static synchronized SecretKey getSecretKey() {
         if (cachedKey != null) {
             return cachedKey;
         }
@@ -25,9 +25,7 @@ public class LocalKeyManager {
                 cachedKey = new SecretKeySpec(keyBytes, "AES");
             } else {
                 byte[] keyBytes = new byte[16];
-                SecureRandom random = new SecureRandom();
-                random.nextBytes(keyBytes);
-                
+                new SecureRandom().nextBytes(keyBytes);
                 Files.write(KEY_PATH, keyBytes);
                 cachedKey = new SecretKeySpec(keyBytes, "AES");
             }

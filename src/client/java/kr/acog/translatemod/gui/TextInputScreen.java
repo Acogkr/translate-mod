@@ -5,22 +5,23 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 
 import java.util.function.Consumer;
 
 public class TextInputScreen extends Screen {
 
-    private final Text titleText;
     private final String initialValue;
     private final Screen parent;
     private final boolean isPassword;
     private final Consumer<String> onSave;
     private TextFieldWidget textField;
 
-    public TextInputScreen(Text title, String initialValue, Screen parent, boolean isPassword, Consumer<String> onSave) {
+    public TextInputScreen(Text title, String initialValue, Screen parent,
+                           boolean isPassword, Consumer<String> onSave) {
         super(title);
-        this.titleText = title;
         this.initialValue = initialValue;
         this.parent = parent;
         this.isPassword = isPassword;
@@ -37,7 +38,9 @@ public class TextInputScreen extends Screen {
         textField.setText(initialValue);
 
         if (isPassword) {
-            textField.addFormatter(new MaskingFormatter(true));
+            textField.addFormatter((text, firstCharIdx) ->
+                    OrderedText.styledForwardsVisitedString("*".repeat(text.length()), Style.EMPTY)
+            );
         }
 
         this.addDrawableChild(textField);
@@ -55,7 +58,8 @@ public class TextInputScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         super.render(context, mouseX, mouseY, deltaTicks);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.titleText, this.width / 2, this.height / 2 - 50, 0xFFFFFF);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title,
+                this.width / 2, this.height / 2 - 50, 0xFFFFFFFF);
     }
 
 }

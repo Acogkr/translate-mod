@@ -4,7 +4,9 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import kr.acog.translatemod.access.TickingSuggesterAccessor;
 import kr.acog.translatemod.api.TranslateHandler;
+import kr.acog.translatemod.config.ClientSetting;
 import kr.acog.translatemod.config.ClientSettingManager;
+import kr.acog.translatemod.util.TranslationCache;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatInputSuggestor;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -19,8 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import static java.util.Collections.synchronizedMap;
 
 @Mixin(ChatInputSuggestor.class)
 public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccessor {
@@ -39,14 +39,7 @@ public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccesso
     @Unique
     private long lastTypedTime = 0;
     @Unique
-    private static final int MAX_CACHE_SIZE = 100;
-    @Unique
-    private static final Map<String, String> suggestionCache = synchronizedMap(new java.util.LinkedHashMap<String, String>(MAX_CACHE_SIZE + 1, .75F, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-            return size() > MAX_CACHE_SIZE;
-        }
-    });
+    private static final Map<String, String> suggestionCache = TranslationCache.create(100);
 
     @Inject(method = "refresh", at = @At("HEAD"))
     private void onRefresh(CallbackInfo ci) {
@@ -56,13 +49,15 @@ public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccesso
 
     @Override
     public void translateMod$tick() {
-        if (!ClientSettingManager.getSetting().enabled()) {
+        ClientSetting setting = ClientSettingManager.getSetting();
+        if (!setting.enabled()) {
             return;
         }
 
         long currentTime = System.currentTimeMillis();
-        long timeout = ClientSettingManager.getSetting().suggestionTimeout();
-        if (shouldProvideCustomSuggestions(textField.getText()) && currentTime - lastTypedTime > timeout && !executed) {
+        if (shouldProvideCustomSuggestions(textField.getText())
+                && currentTime - lastTypedTime > setting.suggestionTimeout()
+                && !executed) {
             executeCustomSuggestions();
             executed = true;
         }
@@ -74,27 +69,24 @@ public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccesso
             return CompletableFuture.completedFuture(new SuggestionsBuilder(currentInput, 0).build());
         }
 
-        String cached = suggestionCache.get(currentInput);
+        ClientSetting setting = ClientSettingManager.getSetting();
+        String cacheKey = currentInput + "\0" + setting.suggestionLanguage().name() + "\0" + setting.translationFingerprint();
+
+        String cached = suggestionCache.get(cacheKey);
         if (cached != null) {
             SuggestionsBuilder builder = new SuggestionsBuilder(currentInput, 0);
             builder.suggest(cached);
             return CompletableFuture.completedFuture(builder.build());
         }
 
-        if (pendingSuggestions != null && !pendingSuggestions.isDone()) {
-            return pendingSuggestions;
-        }
-
-        return TranslateHandler.translateAsync(currentInput, ClientSettingManager.getSetting().targetLanguage(), ClientSettingManager.getSetting()).thenApplyAsync(translated -> {
-            suggestionCache.put(currentInput, translated);
-            SuggestionsBuilder builder = new SuggestionsBuilder(currentInput, 0);
-            builder.suggest(translated);
-            return builder.build();
-        }, MinecraftClient.getInstance()).exceptionally(e -> {
-            SuggestionsBuilder errorBuilder = new SuggestionsBuilder(currentInput, 0);
-            errorBuilder.suggest("번역 실패");
-            return errorBuilder.build();
-        });
+        return TranslateHandler.translateAsync(currentInput, setting.suggestionLanguage(), setting)
+                .thenApply(translated -> {
+                    suggestionCache.put(cacheKey, translated);
+                    SuggestionsBuilder builder = new SuggestionsBuilder(currentInput, 0);
+                    builder.suggest(translated);
+                    return builder.build();
+                })
+                .exceptionally(e -> new SuggestionsBuilder(currentInput, 0).build());
     }
 
     @Unique
@@ -109,7 +101,7 @@ public abstract class ChatInputSuggestorMixin implements TickingSuggesterAccesso
 
         future.thenRun(() -> {
             if (this.pendingSuggestions == future) {
-                this.show(true);
+                MinecraftClient.getInstance().execute(() -> this.show(true));
             }
         });
     }

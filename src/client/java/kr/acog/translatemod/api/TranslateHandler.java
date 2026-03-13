@@ -1,40 +1,38 @@
 package kr.acog.translatemod.api;
 
+import kr.acog.translatemod.api.handler.ClaudeRequestHandler;
 import kr.acog.translatemod.api.handler.GoogleGeminiRequestHandler;
+import kr.acog.translatemod.api.handler.OllamaRequestHandler;
+import kr.acog.translatemod.api.handler.OpenAiRequestHandler;
 import kr.acog.translatemod.config.ClientSetting;
+import kr.acog.translatemod.type.Provider;
 import kr.acog.translatemod.type.TargetLanguage;
 
 import java.util.concurrent.CompletableFuture;
 
 public class TranslateHandler {
 
-    public static CompletableFuture<String> translateAsync(String original, TargetLanguage targetLanguageCode,
-            ClientSetting setting) {
+    public static CompletableFuture<String> translateAsync(String original, TargetLanguage targetLanguage, ClientSetting setting) {
         if (!setting.enabled()) {
             return CompletableFuture.completedFuture(original);
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            String targetLanguageName = targetLanguageCode.getApiName();
-            return TranslateData.ofDefault(setting, original, targetLanguageName);
-        }).thenCompose(data -> {
-            if (data.setting.key().isEmpty()) {
-                return CompletableFuture.completedFuture("API 키가 설정되지 않았습니다.");
-            }
+        TranslateData data = TranslateData.ofDefault(setting, original, targetLanguage.getApiName());
 
-            CompletableFuture<String> primary = GoogleGeminiRequestHandler.request(data);
+        if (data.setting().model().getProvider() != Provider.OLLAMA && data.setting().currentApiKey().isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("API 키가 설정되지 않았습니다."));
+        }
 
-            if (primary == null) {
-                return CompletableFuture.completedFuture("요청 생성 실패.");
-            }
+        return dispatch(data);
+    }
 
-            return primary.handle((result, ex) -> {
-                if (ex != null) {
-                    return "번역 실패: " + ex.getMessage();
-                }
-                return result;
-            });
-        });
+    private static CompletableFuture<String> dispatch(TranslateData data) {
+        return switch (data.setting().model().getProvider()) {
+            case GEMINI -> GoogleGeminiRequestHandler.request(data);
+            case OPENAI -> OpenAiRequestHandler.request(data);
+            case CLAUDE -> ClaudeRequestHandler.request(data);
+            case OLLAMA -> OllamaRequestHandler.request(data);
+        };
     }
 
     public record TranslateData(ClientSetting setting, String prompt) {
