@@ -100,7 +100,7 @@ public record ClientSetting(
         return new ClientSetting(
                 TargetLanguage.EN, 3000L, TargetLanguage.KO, "llama3", 1000,
                 new HashMap<>(), "http://localhost:11434", true, "",
-                Model.GEMINI_2_0_FLASH_LITE, PromptMode.STANDARD, TranslateScope.ALL
+                Model.GEMINI_3_1_FLASH_LITE, PromptMode.STANDARD, TranslateScope.ALL
         );
     }
 

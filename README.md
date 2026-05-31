@@ -67,26 +67,26 @@
 
 | 모델 | 속도 | 비용 |
 |---|---|---|
-| gemini-2.5-pro | 느림 | 높음 |
+| gemini-3.1-pro-preview | 느림 | 높음 |
+| gemini-3.5-flash | 보통 | 낮음 |
+| gemini-3.1-flash-lite ✅ 추천 | 매우 빠름 | 매우 낮음 |
 | gemini-2.5-flash | 보통 | 낮음 |
 | gemini-2.5-flash-lite | 빠름 | 매우 낮음 |
-| gemini-2.0-flash | 빠름 | 낮음 |
-| gemini-2.0-flash-lite ✅ 추천 | 매우 빠름 | 매우 낮음 |
 
 **OpenAI** — [OpenAI Platform](https://platform.openai.com/)에서 API 키 발급
 
 | 모델 | 속도 | 비용 |
 |---|---|---|
-| gpt-4o | 보통 | 높음 |
-| gpt-4o-mini | 빠름 | 낮음 |
-| gpt-4-turbo | 느림 | 높음 |
-| gpt-3.5-turbo | 빠름 | 매우 낮음 |
+| gpt-5.5 | 느림 | 높음 |
+| gpt-5.4-mini | 빠름 | 낮음 |
+| gpt-5-mini | 빠름 | 낮음 |
+| gpt-5-nano | 매우 빠름 | 매우 낮음 |
 
 **Claude** — [Anthropic Console](https://console.anthropic.com/)에서 API 키 발급
 
 | 모델 | 속도 | 비용 |
 |---|---|---|
-| claude-opus-4-6 | 느림 | 높음 |
+| claude-opus-4-8 | 느림 | 높음 |
 | claude-sonnet-4-6 | 보통 | 높음 |
 | claude-haiku-4-5 | 빠름 | 낮음 |
 
@@ -94,7 +94,7 @@
 
 > ⚠️ 비용이 높은 모델을 선택하면 설정 화면에 경고 메시지가 표시됩니다.
 >
-> 💡 무료 티어 API를 사용하는 경우 응답 속도가 느려 번역에 딜레이가 생길 수 있습니다. 쾌적한 사용을 위해 유료 티어 또는 저비용 모델(`gemini-2.0-flash-lite`, `gpt-4o-mini`, `claude-haiku-4-5`)을 권장합니다.
+> 💡 무료 티어 API를 사용하는 경우 응답 속도가 느려 번역에 딜레이가 생길 수 있습니다. 쾌적한 사용을 위해 유료 티어 또는 저비용 모델(`gemini-3.1-flash-lite`, `gpt-5-nano`, `claude-haiku-4-5`)을 권장합니다.
 
 ---
 
